@@ -10,13 +10,15 @@ window.addEvent = function(event, target, method) {
     }
 }
 
-var connect_addr = "127.0.0.1:8080";
+var connect_addr = "{{ connect_addr }}";
+var crawler_id = {{ crawler_id }};
 
 addEvent('load', window, function() {
-    var lines = document.getElementById('lines');
-    var sock = new WebSocket('ws://' + connect_addr + '/conn');
+    var results = document.getElementById('results');
+    var sock = new WebSocket('ws://' + connect_addr + '/track.ws');
     sock.onopen = function() {
         console.log("open");
+        sock.send(crawler_id);
     };
     sock.onclose = function(e) {
         console.log("close: " + e.data);
@@ -27,14 +29,14 @@ addEvent('load', window, function() {
     sock.onmessage = function(m) {
         var node = document.createElement('p');
         node.innerText = m.data;
-        lines.appendChild(node);
+        results.appendChild(node);
     };
 });
     </script>
   </head>
   <body>
-    <h1>Loading</h1>
-    <div id="lines">
+    <h1>Crawling! (not really)</h1>
+    <div id="results">
     </div>
   </body>
 </html>
