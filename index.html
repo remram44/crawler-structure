@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script type="text/javascript">
+window.addEvent = function(event, target, method) {
+    if(target.addEventListener) {
+        target.addEventListener(event, method, false);
+    } else if (target.attachEvent) {
+        target.attachEvent('on' + event, method);
+    }
+}
+
+var connect_addr = "127.0.0.1:8080";
+
+addEvent('load', window, function() {
+    var lines = document.getElementById('lines');
+    var sock = new WebSocket('ws://' + connect_addr + '/conn');
+    sock.onopen = function() {
+        console.log("open");
+    };
+    sock.onclose = function(e) {
+        console.log("close: " + e.data);
+    };
+    sock.onerror = function(e) {
+        console.log("error: " + e.data);
+    };
+    sock.onmessage = function(m) {
+        var node = document.createElement('p');
+        node.innerText = m.data;
+        lines.appendChild(node);
+    };
+});
+    </script>
+  </head>
+  <body>
+    <h1>Loading</h1>
+    <div id="lines">
+    </div>
+  </body>
+</html>
