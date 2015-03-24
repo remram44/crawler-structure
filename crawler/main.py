@@ -95,8 +95,13 @@ class TrackCrawlerWSProtocol(WebSocketServerProtocol):
     def crawler_result(self, result):
         self.sendMessage(result)
 
-    def crawler_done(self, query):
-        self.sendMessage("done (%s)" % query)
+    def crawler_error(self, msg, err):
+        self.sendMessage("%s: %s" % (msg, err))
+        self._crawler.remove_observer(self)
+        self.sendClose()
+
+    def crawler_done(self):
+        self.sendMessage("done.")
         self._crawler.remove_observer(self)
         self.sendClose()
 

@@ -1,35 +1,77 @@
 import itertools
+import urllib
+from xml.etree import ElementTree
 from twisted.internet import reactor
+from twisted.web.client import Agent, readBody
+from twisted.web.http_headers import Headers
+
+from crawler import config
 
 
-class Crawler(object):
+class Observable(object):
+    def __init__(self):
+        self.__observers = set()
+
+    def add_observer(self, obs):
+        self.__observers.add(obs)
+
+    def remove_observer(self, obs):
+        self.__observers.discard(obs)
+
+    def _notify_observers(self, func, *args, **kwargs):
+        for obs in list(self.__observers):
+            if hasattr(obs, func):
+                getattr(obs, func)(*args, **kwargs)
+
+
+class Crawler(Observable):
     """A crawler.
 
     Currently doesn't do anything useful, just generate some events to test the
     tracking code.
     """
+    agent = Agent(reactor)
+
+    BING_URL = ('https://api.datamarket.azure.com'
+                '/Bing/SearchWeb/v1/Web'
+                '?format=json'
+                '&Query={query}')
+
     def __init__(self, query):
-        self._observers = set()
+        Observable.__init__(self)
+
         self.query = query
-        reactor.callLater(1, self._fake_result)
+        self._search_bing(query)
 
-    def add_observer(self, obs):
-        self._observers.add(obs)
+    def _search_bing(self, query):
+        # Microsoft's doc is a joke
+        # see http://stackoverflow.com/a/10844666/711380
+        print "searching bing for %s" % urllib.quote_plus(query)
+        d = self.agent.request(
+            'GET',
+            self.BING_URL.format(query=urllib.quote_plus(query)),
+            Headers({'User-Agent': ['twisted-crawler'],
+                     'Authorization': [
+                         'Basic {key}:{key}'.format(key=config.BING_KEY)]}),
+            None)
+        d.addCallback(self._bing_request)
+        d.addErrback(self._error, "Bing request failed")
 
-    def remove_observer(self, obs):
-        self._observers.discard(obs)
+    def _bing_request(self, response):
+        print "request processed, reading response"
+        d = readBody(response)
+        d.addCallback(self._bing_response, response)
 
-    def _notify_observers(self, func, *args, **kwargs):
-        for obs in list(self._observers):
-            if hasattr(obs, func):
-                getattr(obs, func)(*args, **kwargs)
+    def _bing_response(self, body, response):
+        print "got response"
+        e = ElementTree.XML(body)
+        import pdb; pdb.set_trace()
+        #self._notify_observers('crawler_result', ...)
+        #self._notify_observers('crawler_done', ...)
 
-    def _fake_result(self, num=0):
-        self._notify_observers('crawler_result', '%s %d' % (self.query, num))
-        if num <= 10:
-            reactor.callLater(1, self._fake_result, num + 1)
-        else:
-            self._notify_observers('crawler_done', self.query)
+    def _error(self, err, msg):
+        self._notify_observers('crawler_error', msg, err)
+        return err
 
 
 class CrawlerManager(object):
