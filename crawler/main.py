@@ -65,14 +65,14 @@ class TrackCrawlerWSProtocol(WebSocketServerProtocol):
         self._crawler = None
 
     def onOpen(self):
-        print "client %d connected" % self._client_id
+        log.msg("client %d connected" % self._client_id)
         self._socket_open = True
 
     def onClose(self, wasClean, code, reason):
-        print "client %d disconnected (%s): %s" % (
-            self._client_id,
-            "clean" if wasClean else "not clean",
-            reason)
+        log.msg("client %d disconnected (%s): %s" % (
+                    self._client_id,
+                    "clean" if wasClean else "not clean",
+                    reason))
         self._socket_open = False
         if self._crawler is not None:
             self._crawler.remove_observer(self)
@@ -86,10 +86,10 @@ class TrackCrawlerWSProtocol(WebSocketServerProtocol):
         except (ValueError, KeyError):
             self.sendMessage("Invalid crawler ID")
             self.sendClose()
-            print "got invalid message from client %d" % self._client_id
+            log.msg("got invalid message from client %d" % self._client_id)
         else:
-            print "client %d now tracking crawler %d" % (self._client_id,
-                                                         crawler_id)
+            log.msg("client %d now tracking crawler %d" % (self._client_id,
+                                                           crawler_id))
             self._crawler.add_observer(self)
 
     def crawler_result(self, result):
@@ -126,7 +126,7 @@ root.putChild('track.ws', WebSocketResource(trackws_factory))
 
 
 def main():
-    log.startLogging(sys.stderr)
+    log.startLogging(sys.stderr, setStdout=0)
 
     factory = Site(root)
     reactor.listenTCP(8080, factory)

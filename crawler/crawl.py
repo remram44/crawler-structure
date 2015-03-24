@@ -2,6 +2,7 @@ import itertools
 import urllib
 from xml.etree import ElementTree
 from twisted.internet import reactor
+from twisted.python import log
 from twisted.web.client import Agent, readBody
 from twisted.web.http_headers import Headers
 
@@ -46,7 +47,7 @@ class Crawler(Observable):
     def _search_bing(self, query):
         # Microsoft's doc is a joke
         # see http://stackoverflow.com/a/10844666/711380
-        print "searching bing for %s" % urllib.quote_plus(query)
+        log.msg("searching bing for %s" % urllib.quote_plus(query))
         d = self.agent.request(
             'GET',
             self.BING_URL.format(query=urllib.quote_plus(query)),
@@ -58,12 +59,12 @@ class Crawler(Observable):
         d.addErrback(self._error, "Bing request failed")
 
     def _bing_request(self, response):
-        print "request processed, reading response"
+        log.msg("request processed, reading response")
         d = readBody(response)
         d.addCallback(self._bing_response, response)
 
     def _bing_response(self, body, response):
-        print "got response"
+        log.msg("got response")
         e = ElementTree.XML(body)
         import pdb; pdb.set_trace()
         #self._notify_observers('crawler_result', ...)
