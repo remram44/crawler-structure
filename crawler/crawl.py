@@ -1,3 +1,4 @@
+from base64 import b64encode
 import itertools
 import urllib
 from xml.etree import ElementTree
@@ -35,8 +36,7 @@ class Crawler(Observable):
 
     BING_URL = ('https://api.datamarket.azure.com'
                 '/Bing/SearchWeb/v1/Web'
-                '?format=json'
-                '&Query={query}')
+                '?Query=\'{query}\'')
 
     def __init__(self, query):
         Observable.__init__(self)
@@ -53,7 +53,8 @@ class Crawler(Observable):
             self.BING_URL.format(query=urllib.quote_plus(query)),
             Headers({'User-Agent': ['twisted-crawler'],
                      'Authorization': [
-                         'Basic {key}:{key}'.format(key=config.BING_KEY)]}),
+                         'Basic %s' % b64encode('{key}:{key}'.format(
+                             key=config.BING_KEY))]}),
             None)
         d.addCallback(self._bing_request)
         d.addErrback(self._error, "Bing request failed")
@@ -65,8 +66,8 @@ class Crawler(Observable):
 
     def _bing_response(self, body, response):
         log.msg("got response")
-        e = ElementTree.XML(body)
         import pdb; pdb.set_trace()
+        e = ElementTree.XML(body)
         #self._notify_observers('crawler_result', ...)
         #self._notify_observers('crawler_done', ...)
 
