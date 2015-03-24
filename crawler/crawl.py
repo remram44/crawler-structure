@@ -1,7 +1,7 @@
 from base64 import b64encode
 import itertools
+import json
 import urllib
-from xml.etree import ElementTree
 from twisted.internet import reactor
 from twisted.python import log
 from twisted.web.client import Agent, readBody
@@ -36,7 +36,8 @@ class Crawler(Observable):
 
     BING_URL = ('https://api.datamarket.azure.com'
                 '/Bing/SearchWeb/v1/Web'
-                '?Query=\'{query}\'')
+                '?$format=json'
+                '&Query=\'{query}\'')
 
     def __init__(self, query):
         Observable.__init__(self)
@@ -66,10 +67,12 @@ class Crawler(Observable):
 
     def _bing_response(self, body, response):
         log.msg("got response")
-        import pdb; pdb.set_trace()
-        e = ElementTree.XML(body)
-        #self._notify_observers('crawler_result', ...)
-        #self._notify_observers('crawler_done', ...)
+        for result in json.loads(body)['d']['results']:
+            description = result['Description']
+            title = result['Title']
+            url = result['Url']
+            #self._notify_observers('crawler_result', ...)
+            #self._notify_observers('crawler_done', ...)
 
     def _error(self, err, msg):
         self._notify_observers('crawler_error', msg, err)
