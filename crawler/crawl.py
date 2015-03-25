@@ -68,11 +68,10 @@ class Crawler(Observable):
     def _bing_response(self, body, response):
         log.msg("got response")
         for result in json.loads(body)['d']['results']:
-            description = result['Description']
-            title = result['Title']
-            url = result['Url']
-            #self._notify_observers('crawler_result', ...)
-            #self._notify_observers('crawler_done', ...)
+            title = result['Title'].encode('utf-8')
+            url = result['Url'].encode('utf-8')
+            self._notify_observers('crawler_result', title, url)
+        self._notify_observers('crawler_done')
 
     def _error(self, err, msg):
         self._notify_observers('crawler_error', msg, err)

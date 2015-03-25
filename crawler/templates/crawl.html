@@ -27,9 +27,15 @@ addEvent('load', window, function() {
         console.log("error: " + e.data);
     };
     sock.onmessage = function(m) {
-        var node = document.createElement('p');
-        node.innerText = m.data;
-        results.appendChild(node);
+        var d = m.data;
+        var p = d.indexOf('|');
+        if(p > -1) {
+            var url = d.substring(0, p);
+            var title = d.substring(p + 1);
+            var node = document.createElement('p');
+            node.innerHTML = "<a href=\"" + url + "\">" + title + "</a>";
+            results.appendChild(node);
+        }
     };
 });
     </script>

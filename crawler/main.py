@@ -92,8 +92,8 @@ class TrackCrawlerWSProtocol(WebSocketServerProtocol):
                                                            crawler_id))
             self._crawler.add_observer(self)
 
-    def crawler_result(self, result):
-        self.sendMessage(result)
+    def crawler_result(self, title, url):
+        self.sendMessage('%s|%s' % (url.replace('|', '%7C'), title))
 
     def crawler_error(self, msg, err):
         self.sendMessage("%s: %s" % (msg, err))
